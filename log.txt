@@ -1,0 +1,33 @@
+INFORMATION: Opened '/dev/tty' for input
+INFORMATION: Host library 'libEGL.so' loaded
+INFORMATION: EGL Bindings: Successfully loaded library libEGL.so
+
+INFORMATION: Trying to create context for all configs.
+INFORMATION: EGL context creation: EGL_KHR_create_context supported
+INFORMATION: SUCCESS creating context! Reporting success. (Used config #0) .
+INFORMATION: Maximum API level detected: OpenGL ES 3.1
+INFORMATION: Requested minimum API level : OpenGL ES 2.0. Will actually create OpenGL ES 3.1 since it is supported.
+INFORMATION: EGL context creation: EGL_KHR_create_context supported...
+INFORMATION: Trying to get OpenGL ES version : 3.1
+INFORMATION: EGL context creation: EGL_IMG_context_priority not supported. Ignoring context Priority attribute.
+INFORMATION: EGL context creation: Number of EGL Configs found: 1
+INFORMATION: Creating EGL context...
+INFORMATION: EGL Initialized Successfully
+INFORMATION: === Final EGL Configuration ===
+INFORMATION: 	RedBits: 8
+INFORMATION: 	GreenBits: 8
+INFORMATION: 	BlueBits: 8
+INFORMATION: 	AlphaBits: 8
+INFORMATION: 	DepthBits: 24
+INFORMATION: 	StencilBits: 0
+INFORMATION: 	aaSamples: 0
+INFORMATION: 	FullScreen: false
+INFORMATION: ===============================
+INFORMATION: [EglContext::init] Enabling sRGB window backbuffer.
+INFORMATION: Host library 'libGLESv2.so' loaded
+INFORMATION: OpenGL ES Bindings: Successfully loaded library libGLESv2.so for OpenGL ES 2.0
+
+INFORMATION: Host library 'libGLESv2.so' loaded
+INFORMATION: OpenGL ES Bindings: Successfully loaded library libGLESv2.so for OpenGL ES 3.0
+
+INFORMATION: ALPHA format texture detected in OpenGL ES 3+ context. Remapping to RED texture with swizzling (0,0,0,r) enabled in order to allow Texture Storage.
