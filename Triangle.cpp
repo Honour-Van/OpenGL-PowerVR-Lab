@@ -84,7 +84,7 @@ void Triangle::SetPosition(float x, float y, float z)
     _position = glm::translate(glm::vec3(x, y, z));
 }
 
-bool Cube::Init(pvr::Shell *shell, uint32_t mvpLoc)
+bool Cube::Init(pvr::Shell *shell, uint32_t mvpLoc, GLuint color)
 {
     static char vertices[] = {
         -1,-1,-1, -1,-1, 1, -1, 1, 1,
@@ -120,11 +120,12 @@ bool Cube::Init(pvr::Shell *shell, uint32_t mvpLoc)
     static const float CS = 0.03f; // Cube size
 
     for (int i = 0; i < 6; ++i) {
+        int colori = i == 4 ? 4 : 6;
+        if (color != 7) colori = color;
         for (int j = 0; j < 6; ++j) {
             vbodata[i * 36 + j * 6] = vertices[i * 18 + j * 3] * CS;
             vbodata[i * 36 + j * 6 + 1] = vertices[i * 18 + j * 3 + 1] * CS;
             vbodata[i * 36 + j * 6 + 2] = vertices[i * 18 + j * 3 + 2] * CS;
-            int colori = i == 4 ? 4 : 6;
             for (int k = 0; k < 3; ++ k)
                 vbodata[i * 36 + j * 6 + 3 + k] = facecolor[colori * 3 + k];
         }

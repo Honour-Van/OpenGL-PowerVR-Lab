@@ -77,7 +77,7 @@ pvr::Result HelloPVR::initView()
 
     // Setup the text to be rendered
     _uiRenderer.init(getWidth(), getHeight(), isFullScreen(), (_context->getApiVersion() == pvr::Api::OpenGLES2) || (getBackBufferColorspace() == pvr::ColorSpace::sRGB));
-    _uiRenderer.getDefaultTitle()->setText("OpenGLES Draw Cube");
+    _uiRenderer.getDefaultTitle()->setText("Gluttonous Snake");
     _uiRenderer.getDefaultTitle()->commitUpdates();
 
     static const char* attribs[] = {"inVertex", "inTexColor"};
@@ -90,7 +90,7 @@ pvr::Result HelloPVR::initView()
     uint32_t mvpLoc = gl::GetUniformLocation(_program, "MVPMatrix");
 
     for (auto item : _cubes)
-        if (!item->Init(this, mvpLoc))
+        if (!item->Init(this, mvpLoc, 7))
         {
             throw pvr::InvalidDataError(" ERROR: Triangle failed in Init()");
             return pvr::Result::UnknownError;

@@ -33,6 +33,7 @@ public:
 class Cube : public Triangle
 {
 public:
-    bool Init(pvr::Shell *shell, uint32_t mvpLoc);
+    bool Init(pvr::Shell *shell, uint32_t mvpLoc, GLuint color=7);
     void Render(glm::mat4 view, glm::mat4 projection);
 };
+
