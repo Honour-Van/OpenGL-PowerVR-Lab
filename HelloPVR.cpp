@@ -252,7 +252,7 @@ pvr::Result HelloPVR::releaseView()
 \brief  Main rendering loop function of the program. The shell will call this function every frame.
 ***********************************************************************************************************************/
 int nframe = 0;
-const int cellFrame = 50;
+const int cellFrame = 20;
 pvr::Result HelloPVR::renderFrame()
 {
     //  Clears the color buffer. glClear() can also be used to clear the depth or stencil buffer
@@ -281,18 +281,20 @@ pvr::Result HelloPVR::renderFrame()
 
         _snakeHead = new mBox;
         _snakeHead->SetDirec(curDirec);
+        _snake.front()->SetDirec(curDirec); // 将拐角处的方块设计好，即可使得转弯变得流畅
         _snakeHead->SetPosition(curX, curZ);
         _snakeHead->Move(curX, curZ);
+
+        uint32_t mvpLoc = gl::GetUniformLocation(_program, "MVPMatrix");
+        _snakeHead->Init(this, mvpLoc, 2);
+        
+        _snakeTail->Hide();
         if (_treat.getTreat(curX, curZ))
         {
             _treat.generateTreat();
             _treat.SetPosition();
         }
-        uint32_t mvpLoc = gl::GetUniformLocation(_program, "MVPMatrix");
-        _snakeHead->Init(this, mvpLoc, 2);
-
-        _snakeTail->Hide();
-        _snake.pop_back();
+        else _snake.pop_back(); // 如是在吃到treat之后可以增长
         _snakeTail = _snake.back();
 
         atGrid = false;
@@ -419,11 +421,6 @@ void Triangle::MovePace(float x, float y, float z)
     _position = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)) * _position;
 }
 
-void Triangle::Hide()
-{
-    MovePace(0, 0, 5);
-}
-
 bool Cube::Init(pvr::Shell *shell, uint32_t mvpLoc, GLuint color)
 {
     static char vertices[] = {
@@ -508,7 +505,7 @@ void Cube::Render(glm::mat4 view, glm::mat4 projection)
 void mBox::SetPosition(int x, int z)
 {
     Cube::SetPosition(delta * x, cubesize, delta * z);
-
+    checkBoard(x, z) = 1;
 }
 
 void mBox::Move(float cellframe)
@@ -543,8 +540,13 @@ void mBox::Move(int& x, int& z)
     else if (_direction == 2) z -= 1;
     else if (_direction == 3) x -= 1; 
     static int l = 2 * _boardLen;
-    if (x < -_boardLen) x += l;
-    if (x >  _boardLen) x -= l;
-    if (z < -_boardLen) z += l;
-    if (z >  _boardLen) z -= l;
+    if (x <= -_boardLen+1) x += (l+1);
+    if (x >=  _boardLen)    x -= (l+1);
+    if (z <= -_boardLen+1)    z += (l+1);
+    if (z >=  _boardLen) z -= (l+1);
+}
+
+void Triangle::Hide()
+{
+    MovePace(0, 0, 5);
 }
