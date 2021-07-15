@@ -41,6 +41,7 @@ public:
     void Render(glm::mat4 view, glm::mat4 projection);
     void SetPosition(float x, float y, float z);
     void MovePace(float x, float y, float z);
+    void Hide();
 };
 
 class Cube : public Triangle
@@ -61,6 +62,7 @@ public:
     void SetDirec(int dirc) { _direction = dirc; };
     void SetPosition(int x, int z);
     void Move(float progress);
+    void Move(int&, int&);
 };
 
 class Treat : public Cube
@@ -70,6 +72,7 @@ class Treat : public Cube
 public:
     void generateTreat();
     void SetPosition() { Cube::SetPosition(x * delta, cubesize, y * delta); }
+    bool getTreat(int x_, int y_) {return x == x_ && y == y_; }
 };
 
 unsigned seed = time(0);
@@ -129,24 +132,22 @@ public:
 ***********************************************************************************************************************/
 pvr::Result HelloPVR::initApplication()
 {
-    Cube *tmp;
-    for (GLfloat x = -1.f; x < 1.f; x += delta)
-    {
-        for (GLfloat y = -1.f; y < 1.f; y += delta)
+    for (int i = -_boardLen; i <= _boardLen; i++)
+        for (int j = -_boardLen; j <= _boardLen; j++)
         {
-            tmp = new Cube;
-            tmp->SetPosition(x, -cubesize, y);
+            Cube *tmp = new Cube;
+            tmp->SetPosition(static_cast<float>(i) * delta, -cubesize,
+                             static_cast<float>(j) * delta);
             _cubes.push_back(tmp);
         }
-    }
 
+    curDirec = 2;
     _snakeHead = new mBox;
     _snakeHead->SetDirec(curDirec);
     _snakeHead->SetPosition(1, 0);
-    curX = 1, curZ = 0;
+    curX = 1, curZ = -1;
 
     mBox *tmpp;
-    curDirec = 2;
     for (int i = 0; i < 3; i++)
     {
         tmpp = new mBox;
@@ -200,7 +201,7 @@ pvr::Result HelloPVR::initView()
     uint32_t mvpLoc = gl::GetUniformLocation(_program, "MVPMatrix");
 
     for (auto item : _cubes)
-        if (!item->Init(this, mvpLoc, 7))
+        if (!item->Init(this, mvpLoc, 4))
         {
             throw pvr::InvalidDataError(" ERROR: Triangle failed in Init()");
             return pvr::Result::UnknownError;
@@ -218,7 +219,8 @@ pvr::Result HelloPVR::initView()
         throw pvr::InvalidDataError(" ERROR: Triangle failed in Init()");
         return pvr::Result::UnknownError;
     }
-    _camTheta = glm::radians(55.0f);
+
+    _camTheta = glm::radians(55.f);
     _camRho = 2.0f;
     _projection = pvr::math::perspective(pvr::Api::OpenGLES2, 45, static_cast<float>(this->getWidth()) / static_cast<float>(this->getHeight()), 0.1, 100, 0);
 
@@ -249,7 +251,8 @@ pvr::Result HelloPVR::releaseView()
 \return Return Result::Success if no error occurred
 \brief  Main rendering loop function of the program. The shell will call this function every frame.
 ***********************************************************************************************************************/
-const int cellFrame = 1;
+int nframe = 0;
+const int cellFrame = 50;
 pvr::Result HelloPVR::renderFrame()
 {
     //  Clears the color buffer. glClear() can also be used to clear the depth or stencil buffer
@@ -264,15 +267,14 @@ pvr::Result HelloPVR::renderFrame()
         _camTheta -= 0.01f;
 
     if (pvr::Shell::isKeyPressed(pvr::Keys::W))
-        curDirec = 0;
+        if (curDirec != 0) curDirec = 2;
     if (pvr::Shell::isKeyPressed(pvr::Keys::A))
-        curDirec = 3;
+        if (curDirec != 1) curDirec = 3;
     if (pvr::Shell::isKeyPressed(pvr::Keys::S))
-        curDirec = 2;
+        if (curDirec != 2) curDirec = 0;
     if (pvr::Shell::isKeyPressed(pvr::Keys::D))
-        curDirec = 1;
+        if (curDirec != 3) curDirec = 1;
 
-    int nframe = 0;
     if (atGrid)
     {
         _snake.push_front(_snakeHead);
@@ -280,18 +282,26 @@ pvr::Result HelloPVR::renderFrame()
         _snakeHead = new mBox;
         _snakeHead->SetDirec(curDirec);
         _snakeHead->SetPosition(curX, curZ);
+        _snakeHead->Move(curX, curZ);
+        if (_treat.getTreat(curX, curZ))
+        {
+            _treat.generateTreat();
+            _treat.SetPosition();
+        }
+        uint32_t mvpLoc = gl::GetUniformLocation(_program, "MVPMatrix");
+        _snakeHead->Init(this, mvpLoc, 2);
 
-        delete _snakeTail;
-        _snakeTail = _snake.back();
+        _snakeTail->Hide();
         _snake.pop_back();
+        _snakeTail = _snake.back();
 
         atGrid = false;
     }
     else
     {
-        float progress = static_cast<float>(nframe) / static_cast<float>(cellFrame);
-        _snakeHead->Move(progress);
-        _snakeTail->Move(progress);
+        _snakeHead->Move(cellFrame);
+        _snakeTail->Move(cellFrame);
+        nframe += 1;
         if (nframe == cellFrame)
             atGrid = true, nframe = 0;
     }
@@ -409,6 +419,11 @@ void Triangle::MovePace(float x, float y, float z)
     _position = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)) * _position;
 }
 
+void Triangle::Hide()
+{
+    MovePace(0, 0, 5);
+}
+
 bool Cube::Init(pvr::Shell *shell, uint32_t mvpLoc, GLuint color)
 {
     static char vertices[] = {
@@ -493,11 +508,12 @@ void Cube::Render(glm::mat4 view, glm::mat4 projection)
 void mBox::SetPosition(int x, int z)
 {
     Cube::SetPosition(delta * x, cubesize, delta * z);
+
 }
 
-void mBox::Move(float progress)
+void mBox::Move(float cellframe)
 {
-    float pace = delta * progress;
+    float pace = delta / cellframe;
     if (_direction == 0)
     {
         Cube::MovePace(0, 0, pace);
@@ -518,4 +534,17 @@ void mBox::Move(float progress)
         Cube::MovePace(-pace, 0, 0);
         _x -= pace;
     }
+}
+
+void mBox::Move(int& x, int& z)
+{
+    if (_direction == 0) z += 1;
+    else if (_direction == 1) x += 1;
+    else if (_direction == 2) z -= 1;
+    else if (_direction == 3) x -= 1; 
+    static int l = 2 * _boardLen;
+    if (x < -_boardLen) x += l;
+    if (x >  _boardLen) x -= l;
+    if (z < -_boardLen) z += l;
+    if (z >  _boardLen) z -= l;
 }
