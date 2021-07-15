@@ -1,6 +1,9 @@
 #pragma once
 #include "PVRShell/PVRShell.h"
 #include "PVRUtils/PVRUtilsGles.h"
+#include <stack>
+
+static const float cubesize = 0.03f; // Cube size
 
 class Triangle
 {
@@ -24,7 +27,6 @@ public:
     Triangle(void);
     ~Triangle(void);
 
-    void Update(float angle);
     bool Init(pvr::Shell *shell, uint32_t mvpLoc);
     void Render(glm::mat4 view, glm::mat4 projection);
     void SetPosition(float x, float y, float z);
@@ -37,3 +39,12 @@ public:
     void Render(glm::mat4 view, glm::mat4 projection);
 };
 
+class mBox : public Cube
+{
+private:
+    int _direction; // 0 forward(z++) 1 right(x++) 2 backward(z--) 3 left(x--)
+
+public:
+    int GetDirec() { return _direction; };
+    void SetDirec(int dirc) { _direction = dirc; };
+};

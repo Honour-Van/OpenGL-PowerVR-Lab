@@ -51,12 +51,6 @@ bool Triangle::Init(pvr::Shell* shell, uint32_t mvpLoc)
     return true;
 }
 
-void Triangle::Update(float angle)
-{
-    // Rotate along Y Axis
-    _rotation *= glm::rotate(angle, glm::vec3(0, -1, 0));
-}
-
 void Triangle::Render(glm::mat4 view, glm::mat4 projection)
 {
     unsigned int _stride = 6 * sizeof(GLfloat);
@@ -117,15 +111,14 @@ bool Cube::Init(pvr::Shell *shell, uint32_t mvpLoc, GLuint color)
         1.0f, 1.0f, 0.0f, // Yellow
         0.0f, 0.0f, 0.0f, // Black
     };
-    static const float CS = 0.03f; // Cube size
 
     for (int i = 0; i < 6; ++i) {
         int colori = i == 4 ? 4 : 6;
         if (color != 7) colori = color;
         for (int j = 0; j < 6; ++j) {
-            vbodata[i * 36 + j * 6] = vertices[i * 18 + j * 3] * CS;
-            vbodata[i * 36 + j * 6 + 1] = vertices[i * 18 + j * 3 + 1] * CS;
-            vbodata[i * 36 + j * 6 + 2] = vertices[i * 18 + j * 3 + 2] * CS;
+            vbodata[i * 36 + j * 6] = vertices[i * 18 + j * 3] * cubesize;
+            vbodata[i * 36 + j * 6 + 1] = vertices[i * 18 + j * 3 + 1] * cubesize;
+            vbodata[i * 36 + j * 6 + 2] = vertices[i * 18 + j * 3 + 2] * cubesize;
             for (int k = 0; k < 3; ++ k)
                 vbodata[i * 36 + j * 6 + 3 + k] = facecolor[colori * 3 + k];
         }

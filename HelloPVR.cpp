@@ -3,11 +3,42 @@
 #include "Triangle.h"
 #include <vector>
 #include <iostream>
-
+#include <list>
+#include <ctime>
+#include <cstdlib>
 /*!*********************************************************************************************************************
  To use the shell, you have to inherit a class from PVRShell
  and implement the five virtual functions which describe how your application initializes, runs and releases the resources.
 ***********************************************************************************************************************/
+constexpr int _boardLen = 16;
+int board[2*_boardLen+1][2*_boardLen+1];
+int &checkBoard(int x, int z) { return board[x+_boardLen][z+_boardLen];}
+GLfloat delta = 1.f/_boardLen;
+
+extern const float cubesize;
+
+class Treat : public Cube
+{
+    int x, y;
+public:
+    void generateTreat();
+    void SetPosition() { Cube::SetPosition(x*delta, cubesize, y*delta);}
+};
+
+unsigned seed = time(0);
+void Treat::generateTreat()
+{
+    srand(seed);
+    int nx, ny;
+    do{
+    nx = rand() % (2*_boardLen+1) - _boardLen;
+    ny = rand() % (2*_boardLen+1) - _boardLen;
+    } while (checkBoard(nx, ny));
+    checkBoard(x, y) = 0;
+    checkBoard(nx, ny) = 2;
+    x = nx, y = ny;
+}
+
 class HelloPVR : public pvr::Shell
 {
     pvr::EglContext _context;
@@ -15,10 +46,17 @@ class HelloPVR : public pvr::Shell
     pvr::ui::UIRenderer _uiRenderer;
     GLuint _program;
     GLuint _vbo;
-    GLuint _boardLen;
 
     std::vector<Cube*> _cubes;
-    
+
+    // from previous head to the last but one (just before tail)
+    std::list<mBox*> _snake;
+    mBox *_snakeHead;
+    mBox *_snakeTail;
+    int curDirec;
+
+    Treat _treat;
+
     glm::vec3 _camPosition;
     glm::mat4 _projection;
     float _camTheta;
@@ -42,15 +80,33 @@ public:
 pvr::Result HelloPVR::initApplication()
 {
     Cube* tmp;
-    _boardLen = 16;
-    GLfloat delta = 1.f/_boardLen;
     for (GLfloat x = -1.f; x < 1.f; x += delta){
         for (GLfloat y = -1.f; y < 1.f; y += delta){
             tmp = new Cube;
-            tmp->SetPosition(x, -0.03, y);
+            tmp->SetPosition(x, -cubesize, y);
             _cubes.push_back(tmp);
         }
     }
+
+    _snakeHead = new mBox;
+    _snakeHead->SetDirec(2);
+    _snakeHead->SetPosition(delta, cubesize, 0);
+
+    mBox* tmpp;
+    curDirec = 2;
+    for (int i = 0; i < 3; i++){
+        tmpp = new mBox;
+        tmpp->SetDirec(2);
+        tmpp->SetPosition(delta, cubesize, delta*i);
+        _snake.push_back(tmpp);
+        checkBoard(1, i) = 1; // body is here
+    }
+
+    _snakeTail = tmpp;
+
+    _treat.generateTreat();
+    _treat.SetPosition();
+
     return pvr::Result::Success;
 }
 
@@ -95,8 +151,17 @@ pvr::Result HelloPVR::initView()
             throw pvr::InvalidDataError(" ERROR: Triangle failed in Init()");
             return pvr::Result::UnknownError;
         }
-
-
+    for (auto mbox : _snake)
+        if (!mbox->Init(this, mvpLoc, 2))
+        {
+            throw pvr::InvalidDataError(" ERROR: Triangle failed in Init()");
+            return pvr::Result::UnknownError;
+        }
+        if (!_treat.Init(this, mvpLoc, 3))
+        {
+            throw pvr::InvalidDataError(" ERROR: Triangle failed in Init()");
+            return pvr::Result::UnknownError;
+        }
     _camTheta = glm::radians(55.0f);
     _camRho = 2.0f;
     _projection = pvr::math::perspective(pvr::Api::OpenGLES2, 45, static_cast<float>(this->getWidth()) / static_cast<float>(this->getHeight()), 0.1, 100, 0);
@@ -151,7 +216,9 @@ pvr::Result HelloPVR::renderFrame()
 
     for (auto cube : _cubes)
         cube->Render(view, _projection);
-
+    for (auto snake: _snake)
+        snake->Render(view, _projection);
+    _treat.Render(view, _projection);
     // Display some text
     _uiRenderer.beginRendering();
     _uiRenderer.getDefaultTitle()->render();
