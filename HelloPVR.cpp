@@ -11,9 +11,9 @@
 ***********************************************************************************************************************/
 const float cubesize = 0.03f; // Cube size
 constexpr int _boardLen = 16;
-int board[2 * _boardLen + 1][2 * _boardLen + 1];
+int board[4 * _boardLen + 1][4 * _boardLen + 1];
 const float delta = 1.f / _boardLen;
-int &checkBoard(int x, int z) { return board[x + _boardLen][z + _boardLen]; }
+int &checkBoard(int x, int z) { return board[x + 2 * _boardLen][z + 2 * _boardLen]; }
 
 class Triangle
 {
@@ -62,7 +62,8 @@ public:
     void SetDirec(int dirc) { _direction = dirc; };
     void SetPosition(int x, int z);
     void Move(float progress);
-    void Move(int&, int&);
+    void Move(int &, int &);
+    void Hide();
 };
 
 class Treat : public Cube
@@ -72,7 +73,7 @@ class Treat : public Cube
 public:
     void generateTreat();
     void SetPosition() { Cube::SetPosition(x * delta, cubesize, y * delta); }
-    bool getTreat(int x_, int y_) {return x == x_ && y == y_; }
+    bool getTreat(int x_, int y_) { return x == x_ && y == y_; }
 };
 
 unsigned seed = time(0);
@@ -238,6 +239,12 @@ pvr::Result HelloPVR::initView()
 ***********************************************************************************************************************/
 pvr::Result HelloPVR::releaseView()
 {
+    _snakeHead->Hide();
+    for (auto node : _snake)
+        node->Hide();
+    _snakeTail->Hide();
+    while (!_snake.empty())
+        _snake.pop_back();
     // Release Vertex buffer object.
     if (_vbo)
         gl::DeleteBuffers(1, &_vbo);
@@ -253,6 +260,7 @@ pvr::Result HelloPVR::releaseView()
 ***********************************************************************************************************************/
 int nframe = 0;
 const int cellFrame = 20;
+bool _pause = false;
 pvr::Result HelloPVR::renderFrame()
 {
     //  Clears the color buffer. glClear() can also be used to clear the depth or stencil buffer
@@ -274,39 +282,53 @@ pvr::Result HelloPVR::renderFrame()
         if (curDirec != 2) curDirec = 0;
     if (pvr::Shell::isKeyPressed(pvr::Keys::D))
         if (curDirec != 3) curDirec = 1;
-
-    if (atGrid)
+    
+    if (!_pause)
     {
-        _snake.push_front(_snakeHead);
-
-        _snakeHead = new mBox;
-        _snakeHead->SetDirec(curDirec);
-        _snake.front()->SetDirec(curDirec); // 将拐角处的方块设计好，即可使得转弯变得流畅
-        _snakeHead->SetPosition(curX, curZ);
-        _snakeHead->Move(curX, curZ);
-
-        uint32_t mvpLoc = gl::GetUniformLocation(_program, "MVPMatrix");
-        _snakeHead->Init(this, mvpLoc, 2);
-        
-        _snakeTail->Hide();
-        if (_treat.getTreat(curX, curZ))
+        if (atGrid)
         {
-            _treat.generateTreat();
-            _treat.SetPosition();
-        }
-        else _snake.pop_back(); // 如是在吃到treat之后可以增长
-        _snakeTail = _snake.back();
+            _snake.push_front(_snakeHead);
 
-        atGrid = false;
+            _snakeHead = new mBox;
+            _snakeHead->SetDirec(curDirec);
+            _snake.front()->SetDirec(curDirec); // 将拐角处的方块设计好，即可使得转弯变得流畅
+            _snakeHead->SetPosition(curX, curZ);
+            _snakeHead->Move(curX, curZ);
+            if (checkBoard(curX, curZ) == 1)
+                _pause = true;
+            uint32_t mvpLoc = gl::GetUniformLocation(_program, "MVPMatrix");
+            _snakeHead->Init(this, mvpLoc, 2);
+
+            _snakeTail->Hide();
+            if (_treat.getTreat(curX, curZ))
+            {
+                _treat.generateTreat();
+                _treat.SetPosition();
+            }
+            else
+                _snake.pop_back(); // 如是在吃到treat之后可以增长
+            _snakeTail = _snake.back();
+
+            atGrid = false;
+        }
+        else
+        {
+            _snakeHead->Move(cellFrame);
+            _snakeTail->Move(cellFrame);
+            nframe += 1;
+            if (nframe == cellFrame)
+                atGrid = true, nframe = 0;
+        }
     }
-    else
+    else /* when pausing*/ 
+    if (pvr::Shell::isKeyPressed(pvr::Keys::Key9))
     {
-        _snakeHead->Move(cellFrame);
-        _snakeTail->Move(cellFrame);
-        nframe += 1;
-        if (nframe == cellFrame)
-            atGrid = true, nframe = 0;
+        _pause = false;
+        releaseView();
+        initApplication();
+        initView();
     }
+
 
     _camPosition = glm::vec3(_camRho * cos(_camTheta), 1, _camRho * sin(_camTheta));
 
@@ -506,47 +528,51 @@ void mBox::SetPosition(int x, int z)
 {
     Cube::SetPosition(delta * x, cubesize, delta * z);
     checkBoard(x, z) = 1;
+    _x = x, _z = z; // set函数是一个初态设定函数，相当于构造函数的部分，注意初始化
 }
 
 void mBox::Move(float cellframe)
 {
     float pace = delta / cellframe;
     if (_direction == 0)
-    {
         Cube::MovePace(0, 0, pace);
-        _z += pace;
-    }
     else if (_direction == 1)
-    {
         Cube::MovePace(pace, 0, 0);
-        _x += pace;
-    }
     else if (_direction == 2)
-    {
         Cube::MovePace(0, 0, -pace);
-        _z -= pace;
-    }
     else if (_direction == 3)
-    {
         Cube::MovePace(-pace, 0, 0);
-        _x -= pace;
-    }
 }
 
-void mBox::Move(int& x, int& z)
+void mBox::Move(int &x, int &z)
 {
-    if (_direction == 0) z += 1;
-    else if (_direction == 1) x += 1;
-    else if (_direction == 2) z -= 1;
-    else if (_direction == 3) x -= 1; 
+    if (_direction == 0)
+        z += 1;
+    else if (_direction == 1)
+        x += 1;
+    else if (_direction == 2)
+        z -= 1;
+    else if (_direction == 3)
+        x -= 1;
     static int l = 2 * _boardLen;
-    if (x <= -_boardLen+1) x += (l+1);
-    if (x >=  _boardLen)    x -= (l+1);
-    if (z <= -_boardLen+1)    z += (l+1);
-    if (z >=  _boardLen) z -= (l+1);
+    if (x <= -_boardLen + 1)
+        x += (l + 1);
+    if (x >= _boardLen)
+        x -= (l + 1);
+    if (z <= -_boardLen + 1)
+        z += (l + 1);
+    if (z >= _boardLen)
+        z -= (l + 1);
 }
 
 void Triangle::Hide()
 {
+    MovePace(0, 0, 5);
+}
+
+void mBox::Hide()
+{
+    // std::cout << _x << ',' << _z << std::endl;
+    checkBoard(_x, _z) = 0;
     MovePace(0, 0, 5);
 }
