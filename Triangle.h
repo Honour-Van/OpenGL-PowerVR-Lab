@@ -4,6 +4,10 @@
 #include <stack>
 
 static const float cubesize = 0.03f; // Cube size
+constexpr int _boardLen = 16;
+int board[2*_boardLen+1][2*_boardLen+1];
+int &checkBoard(int x, int z) { return board[x+_boardLen][z+_boardLen];}
+GLfloat delta = 1.f/_boardLen;
 
 class Triangle
 {

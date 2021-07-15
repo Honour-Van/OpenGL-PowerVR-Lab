@@ -10,11 +10,9 @@
  To use the shell, you have to inherit a class from PVRShell
  and implement the five virtual functions which describe how your application initializes, runs and releases the resources.
 ***********************************************************************************************************************/
-constexpr int _boardLen = 16;
-int board[2*_boardLen+1][2*_boardLen+1];
-int &checkBoard(int x, int z) { return board[x+_boardLen][z+_boardLen];}
-GLfloat delta = 1.f/_boardLen;
-
+extern const int _boardLen; // constexpr external var should be tagged as const then when using. 
+extern int board[2*_boardLen+1][2*_boardLen+1];
+extern GLfloat delta;
 extern const float cubesize;
 
 class Treat : public Cube
