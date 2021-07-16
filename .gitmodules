@@ -1,3 +1,6 @@
 [submodule "Native_SDK"]
 	path = Native_SDK
 	url = git@github.com:powervr-graphics/Native_SDK.git
+[submodule "PVR_Tutorial"]
+	path = PVR_Tutorial
+	url = git@github.com:setarcos/PVR_Tutorial.git
