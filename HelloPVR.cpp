@@ -5,6 +5,7 @@
 #include <list>
 #include <ctime>
 #include <cstdlib>
+
 /*!*********************************************************************************************************************
  To use the shell, you have to inherit a class from PVRShell
  and implement the five virtual functions which describe how your application initializes, runs and releases the resources.
@@ -226,7 +227,7 @@ pvr::Result HelloPVR::initView()
     _projection = pvr::math::perspective(pvr::Api::OpenGLES2, 45, static_cast<float>(this->getWidth()) / static_cast<float>(this->getHeight()), 0.1, 100, 0);
 
     // Sets the clear color
-    gl::ClearColor(0.0f, 0.4f, 0.7f, 1.0f);
+    gl::ClearColor(0.180f, 0.176f, 0.176f, 1.0f);
 
     // Enable culling
     gl::Enable(GL_CULL_FACE);
@@ -282,7 +283,11 @@ pvr::Result HelloPVR::renderFrame()
         if (curDirec != 2) curDirec = 0;
     if (pvr::Shell::isKeyPressed(pvr::Keys::D))
         if (curDirec != 3) curDirec = 1;
-    
+    if (pvr::Shell::isKeyPressed(pvr::Keys::Comma))
+        _pause = true;
+    else if (pvr::Shell::isKeyPressed(pvr::Keys::Period))
+        _pause = false;
+
     if (!_pause)
     {
         if (atGrid)
