@@ -1,4 +1,4 @@
-#version 310 es
+#version 300 es
 uniform mediump sampler2D sTexture;
 in mediump vec3 texture_or_color;
 out mediump vec4 outColor;

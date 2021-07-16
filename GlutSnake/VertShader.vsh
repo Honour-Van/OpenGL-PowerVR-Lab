@@ -1,4 +1,4 @@
-#version 310 es
+#version 300 es
 in highp vec4    inVertex;
 in mediump vec3  inTexColor;
 uniform mediump mat4    MVPMatrix;

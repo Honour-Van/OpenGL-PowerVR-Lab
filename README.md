@@ -71,3 +71,15 @@ extern变量：直接放到一个文件里
 ![image-20210716094644117](assets/image-20210716094644117.png)
 
 思考是数据格式没有对齐
+
+## 安装
+
+使用Win11下的WSLg重新安装一遍。
+
+- 版本	Windows 11 专业版
+- Update	21H2
+- 安装日期	‎2021/‎7/‎8
+- 操作系统版本	22000.51
+- 体验	Windows Feature Experience Pack 421.16300.0.3
+- WSL2 发行版：Ubuntu 20.04 LTS（21362+的windows可以使用带有图形界面的[WSLg](https://devblogs.microsoft.com/commandline/wslg-architecture/)，才可以运行）
+
