@@ -1,0 +1,3 @@
+[submodule "Native_SDK"]
+	path = Native_SDK
+	url = git@github.com:powervr-graphics/Native_SDK.git
