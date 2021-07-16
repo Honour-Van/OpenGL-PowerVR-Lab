@@ -15,6 +15,27 @@ cmake SDK之后，运行Makefile即可。具体操作过程见：
 
 https://blog.csdn.net/weixin_45502929/article/details/118792099
 
+打开WSL之后，在该仓库文件夹下打开bash，使用如下的命令：
+```bash
+sudo apt update
+# sudo apt install vim # 安装之后换源：https://blog.csdn.net/weixin_45502929/article/details/118552726，只有四条可以手动更改
+sudo apt install build-essential # 安装C编译器
+sudo apt install cmake           # 安装Cmake
+sudo apt install libx11-dev      # 安装X11相关组件
+cd Native_SDK
+mkdir build
+cd build
+cmake .. -DPVR_WINDOW_SYSTEM=X11 # 执行编译
+cd /usr/lib/x86_64-linux-gnu/
+sudo apt install libegl1         # 安装依赖库1
+ls libEGL*
+sudo ln libEGL.so.1 libEGL.so -s # 为其添加链接
+sudo apt install libglesv2       # 安装依赖库2
+ls libGLES*
+sudo ln libGLESv2.so.2 libGLESv2.so -s
+sudo apt install vlc -y          # 图形视频工具
+```
+
 ## 描述
 
 - 一条蛇（负责展现体型）
